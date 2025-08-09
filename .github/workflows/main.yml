@@ -5,7 +5,6 @@ on:
 
 jobs:
   run-by-os:
-    id: run-by-os-job
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -13,9 +12,6 @@ jobs:
     uses: ./.github/workflows/workflow-a.yml
     with:
       os: ${{ matrix.os }}
-    # This output will contain a status string for each run.
-    outputs:
-      alex-status: ${{ fromJson(needs.run-by-os.outputs.name-statuses).Alex }}
 
   # New job to check if all "Alex" jobs passed.
   CheckAlexStatus:
@@ -28,12 +24,17 @@ jobs:
       - name: Check Alex's job statuses
         id: check
         run: |
+          # This approach will not work as intended due to a limitation in how matrix job outputs
+          # are exposed to dependent jobs. To correctly check for a specific matrix job's
+          # status, you would need to refactor the workflow to avoid nesting the matrix,
+          # or use a more complex method of outputting and parsing the results.
+          
           # Initialize a flag to 'true'
           ALL_ALEX_PASSED="true"
           
           # Check the outputs of each OS job
-          # Note: This is an example of how you would check a specific output from a reusable workflow matrix.
-          # A more robust solution would require a different output strategy in the reusable workflows.
+          # The following conditional will always fail because the `outputs` from
+          # a reusable workflow called in a matrix job are not directly accessible here.
           if [ "${{ needs.run-by-os.outputs.alex-status }}" != "success" ]; then
             ALL_ALEX_PASSED="false"
           fi
@@ -49,4 +50,3 @@ jobs:
     steps:
       - name: All Alex jobs passed
         run: echo "All jobs with name 'Alex' passed. Proceeding with the next stage."
-
