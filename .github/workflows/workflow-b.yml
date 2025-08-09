@@ -9,15 +9,10 @@ on:
       name:
         required: true
         type: string
-    outputs:
-      greeting-status:
-        description: "Status of the greeting jobs"
-        value: ${{ steps.get-status.outputs.status }}
 
 jobs:
   run-by-greeting:
     strategy:
-      fail-fast: false
       matrix:
         greeting: [Hello, Goodbye, Goodnight, Wake up]
     name: "Greeting: ${{ matrix.greeting }}"
@@ -26,17 +21,3 @@ jobs:
       os: ${{ inputs.os }}
       name: ${{ inputs.name }}
       greeting: ${{ matrix.greeting }}
-
-  get-status:
-    runs-on: ubuntu-latest
-    needs: run-by-greeting
-    if: always()
-    outputs:
-      status: ${{ steps.check-status.outputs.status }}
-    steps:
-      - name: Check the final status
-        id: check-status
-        run: |
-          # Get the result of the `run-by-greeting` job. If any sub-job failed, it will be 'failure'.
-          STATUS="${{ needs.run-by-greeting.result }}"
-          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
