@@ -6,10 +6,15 @@ on:
       os:
         required: true
         type: string
-
+    outputs:
+      name-statuses:
+        description: "Status of each name job"
+        value: ${{ fromJson(steps.get-statuses.outputs.statuses) }}
+        
 jobs:
   run-by-name:
     strategy:
+      fail-fast: false
       matrix:
         name: [John, Alex, Steve, Betty]
     name: "Name: ${{ matrix.name }}"
@@ -17,12 +22,33 @@ jobs:
     with:
       os: ${{ inputs.os }}
       name: ${{ matrix.name }}
-  run-by-name2:
-    strategy:
-      matrix:
-        name: [Jack, Bob, Mary]
-    name: "Name: ${{ matrix.name }}"
-    uses: ./.github/workflows/workflow-b.yml
-    with:
-      os: ${{ inputs.os }}
-      name: ${{ matrix.name }}
+    id: name-run
+    # Pass the status from the nested workflow up
+    outputs:
+      greeting-status: ${{ steps.get-status.outputs.status }}
+
+  get-statuses:
+    runs-on: ubuntu-latest
+    needs: run-by-name
+    if: always()
+    outputs:
+      statuses: ${{ steps.get-statuses.outputs.statuses }}
+    steps:
+      - name: Collect all name statuses
+        id: get-statuses
+        run: |
+          # Initialize an empty JSON object
+          JSON_OUTPUT="{}"
+          
+          # Iterate over all names in the matrix
+          NAMES=("John" "Alex" "Steve" "Betty")
+          for NAME in "${NAMES[@]}"; do
+            # Get the status for the current name from the job outputs
+            STATUS="${{ needs.run-by-name.outputs.greeting-status }}"
+            
+            # Add the status to the JSON object
+            JSON_OUTPUT=$(echo "$JSON_OUTPUT" | jq --arg name "$NAME" --arg status "$STATUS" '. + {($name): $status}')
+          done
+          
+          # Set the output
+          echo "statuses=$JSON_OUTPUT" >> "$GITHUB_OUTPUT"
