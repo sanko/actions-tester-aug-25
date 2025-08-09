@@ -21,3 +21,13 @@ jobs:
       os: ${{ inputs.os }}
       name: ${{ inputs.name }}
       greeting: ${{ matrix.greeting }}
+  run-by-greeting2:
+    strategy:
+      matrix:
+        greeting: [Sup, Bruh]
+    name: "Greeting: ${{ matrix.greeting }}"
+    uses: ./.github/workflows/workflow-c.yml
+    with:
+      os: ${{ inputs.os }}
+      name: ${{ inputs.name }}
+      greeting: ${{ matrix.greeting }}
