@@ -17,10 +17,5 @@ jobs:
   echo-message:
     runs-on: ${{ inputs.os }}
     steps:
-      - name: "${{ inputs.greeting }}, ${{ inputs.name }} on ${{ inputs.os }}"
-        run: echo "${{ inputs.greeting }}, ${{ inputs.name }} on ${{ inputs.os }}"
-  echo-message2:
-    runs-on: ${{ inputs.os }}
-    steps:
-      - name: "${{ inputs.greeting }}, ${{ inputs.name }} on ${{ inputs.os }}"
+      - name: Echo the message
         run: echo "${{ inputs.greeting }}, ${{ inputs.name }} on ${{ inputs.os }}"
