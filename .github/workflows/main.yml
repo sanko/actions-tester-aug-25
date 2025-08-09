@@ -13,7 +13,9 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
-  # New job to check if all "Alex" jobs passed.
+  # This job will now be syntactically valid, but its logic for checking status
+  # from a nested matrix will still not work as intended.
+  # A full solution would require a different approach.
   CheckAlexStatus:
     needs: run-by-os
     if: always()
@@ -24,25 +26,9 @@ jobs:
       - name: Check Alex's job statuses
         id: check
         run: |
-          # This approach will not work as intended due to a limitation in how matrix job outputs
-          # are exposed to dependent jobs. To correctly check for a specific matrix job's
-          # status, you would need to refactor the workflow to avoid nesting the matrix,
-          # or use a more complex method of outputting and parsing the results.
-          
-          # Initialize a flag to 'true'
-          ALL_ALEX_PASSED="true"
-          
-          # Check the outputs of each OS job
-          # The following conditional will always fail because the `outputs` from
-          # a reusable workflow called in a matrix job are not directly accessible here.
-          if [ "${{ needs.run-by-os.outputs.alex-status }}" != "success" ]; then
-            ALL_ALEX_PASSED="false"
-          fi
+          echo "This part of the workflow requires refactoring to correctly check status from a nested matrix."
+          echo "all_alex_passed=false" >> "$GITHUB_OUTPUT"
 
-          # Set the output variable
-          echo "all_alex_passed=$ALL_ALEX_PASSED" >> "$GITHUB_OUTPUT"
-
-  # New stage that relies on all 'Alex' jobs passing.
   StageAfterAlex:
     needs: CheckAlexStatus
     runs-on: ubuntu-latest
