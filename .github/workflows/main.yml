@@ -5,6 +5,7 @@ on:
 
 jobs:
   run-by-os:
+    id: run-by-os-job
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -12,10 +13,9 @@ jobs:
     uses: ./.github/workflows/workflow-a.yml
     with:
       os: ${{ matrix.os }}
-    id: os-run
     # This output will contain a status string for each run.
     outputs:
-      name-statuses: ${{ fromJson(steps.get-name-statuses.outputs.statuses) }}
+      alex-status: ${{ fromJson(needs.run-by-os.outputs.name-statuses).Alex }}
 
   # New job to check if all "Alex" jobs passed.
   CheckAlexStatus:
@@ -29,26 +29,17 @@ jobs:
         id: check
         run: |
           # Initialize a flag to 'true'
-          ALL_ALEX_PASSED=true
+          ALL_ALEX_PASSED="true"
           
           # Check the outputs of each OS job
-          for os in ubuntu-latest windows-latest macos-latest; do
-            # Get the status for Alex's jobs from the output of the corresponding OS job
-            ALEX_STATUS="${{ needs.run-by-os.outputs.name-statuses['Alex'] }}"
-            
-            # If Alex's status is not 'success', set the flag to 'false'
-            if [ "$ALEX_STATUS" != "success" ]; then
-              ALL_ALEX_PASSED=false
-              break
-            fi
-          done
+          # Note: This is an example of how you would check a specific output from a reusable workflow matrix.
+          # A more robust solution would require a different output strategy in the reusable workflows.
+          if [ "${{ needs.run-by-os.outputs.alex-status }}" != "success" ]; then
+            ALL_ALEX_PASSED="false"
+          fi
 
           # Set the output variable
-          if [ "$ALL_ALEX_PASSED" = true ]; then
-            echo "all_alex_passed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "all_alex_passed=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "all_alex_passed=$ALL_ALEX_PASSED" >> "$GITHUB_OUTPUT"
 
   # New stage that relies on all 'Alex' jobs passing.
   StageAfterAlex:
