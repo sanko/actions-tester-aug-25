@@ -1,0 +1,19 @@
+name: Name Matrix
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  run-by-name:
+    strategy:
+      matrix:
+        name: [John, Alex, Steve, Betty]
+    name: "Name: ${{ matrix.name }}"
+    uses: ./.github/workflows/workflow-b.yml
+    with:
+      os: ${{ inputs.os }}
+      name: ${{ matrix.name }}
