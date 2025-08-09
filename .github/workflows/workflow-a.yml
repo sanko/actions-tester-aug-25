@@ -17,3 +17,12 @@ jobs:
     with:
       os: ${{ inputs.os }}
       name: ${{ matrix.name }}
+  run-by-name2:
+    strategy:
+      matrix:
+        name: [Jack, Bob, Mary]
+    name: "Name: ${{ matrix.name }}"
+    uses: ./.github/workflows/workflow-b.yml
+    with:
+      os: ${{ inputs.os }}
+      name: ${{ matrix.name }}
