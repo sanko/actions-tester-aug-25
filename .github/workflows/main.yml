@@ -12,3 +12,50 @@ jobs:
     uses: ./.github/workflows/workflow-a.yml
     with:
       os: ${{ matrix.os }}
+    id: os-run
+    # This output will contain a status string for each run.
+    outputs:
+      name-statuses: ${{ fromJson(steps.get-name-statuses.outputs.statuses) }}
+
+  # New job to check if all "Alex" jobs passed.
+  CheckAlexStatus:
+    needs: run-by-os
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      all_alex_passed: ${{ steps.check.outputs.all_alex_passed }}
+    steps:
+      - name: Check Alex's job statuses
+        id: check
+        run: |
+          # Initialize a flag to 'true'
+          ALL_ALEX_PASSED=true
+          
+          # Check the outputs of each OS job
+          for os in ubuntu-latest windows-latest macos-latest; do
+            # Get the status for Alex's jobs from the output of the corresponding OS job
+            ALEX_STATUS="${{ needs.run-by-os.outputs.name-statuses['Alex'] }}"
+            
+            # If Alex's status is not 'success', set the flag to 'false'
+            if [ "$ALEX_STATUS" != "success" ]; then
+              ALL_ALEX_PASSED=false
+              break
+            fi
+          done
+
+          # Set the output variable
+          if [ "$ALL_ALEX_PASSED" = true ]; then
+            echo "all_alex_passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "all_alex_passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # New stage that relies on all 'Alex' jobs passing.
+  StageAfterAlex:
+    needs: CheckAlexStatus
+    runs-on: ubuntu-latest
+    if: needs.CheckAlexStatus.outputs.all_alex_passed == 'true'
+    steps:
+      - name: All Alex jobs passed
+        run: echo "All jobs with name 'Alex' passed. Proceeding with the next stage."
+
