@@ -1,0 +1,41 @@
+name: Reusable Runner
+
+on:
+  workflow_call:
+    inputs:
+      os_name:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+      compiler:
+        required: true
+        type: string
+
+jobs:
+  echo-message:
+    runs-on: ${{ inputs.os_name == 'Linux' && 'ubuntu-latest' || inputs.os_name == 'Windows' && 'windows-latest' || inputs.os_name == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
+    steps:
+      - name: Run on native runner
+        if: inputs.os_name != 'BSD' && inputs.os_name != 'Solaris'
+        run: |
+          echo "Running ${{ inputs.compiler }} on ${{ inputs.os_name }} for ${{ inputs.platform }}"
+
+      - name: Setup and run on FreeBSD VM
+        if: inputs.os_name == 'BSD'
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          run: |
+            echo "Running ${{ inputs.compiler }} on ${{ inputs.os_name }} for ${{ inputs.platform }}"
+
+      - name: Setup and run on Solaris VM
+        if: inputs.os_name == 'Solaris'
+        # Note: A placeholder for a Solaris VM action is used here as one does not officially exist in vmactions.
+        # You would replace this with a valid action if available, or a custom script.
+        uses: vmactions/solaris-vm@v1
+        with:
+          usesh: true
+          run: |
+            echo "Running ${{ inputs.compiler }} on ${{ inputs.os_name }} for ${{ inputs.platform }}"
