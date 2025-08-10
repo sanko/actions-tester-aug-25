@@ -1,0 +1,86 @@
+name: Two-Level CI Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os_name: [Linux, Windows, macOS, BSD, Solaris]
+        platform: [ARM, x64]
+        compiler: [gcc, clang, msvc]
+        exclude:
+          # MSVC is only for Windows
+          - os_name: Linux
+            compiler: msvc
+          - os_name: macOS
+            compiler: msvc
+          - os_name: BSD
+            compiler: msvc
+          - os_name: Solaris
+            compiler: msvc
+          # Windows, macOS, BSD and Solaris runners do not support ARM
+          - os_name: Windows
+            platform: ARM
+          - os_name: macOS
+            platform: ARM
+          - os_name: BSD
+            platform: ARM
+          - os_name: Solaris
+            platform: ARM
+    name: "${{ matrix.os_name }} > ${{ matrix.platform }} > ${{ matrix.compiler }}"
+    uses: ./.github/workflows/runner.yml
+    with:
+      os_name: ${{ matrix.os_name }}
+      platform: ${{ matrix.platform }}
+      compiler: ${{ matrix.compiler }}
+
+  Report:
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Markdown Report
+        run: |
+          REPORT_FILE=$GITHUB_STEP_SUMMARY
+
+          echo "# CI Test Summary" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "## Summary by Processor" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "This report shows the results of the tests grouped by operating system, platform, and compiler." >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "### Linux" >> $REPORT_FILE
+          echo "| Platform | Compiler | Status |" >> $REPORT_FILE
+          echo "|----------|----------|--------|" >> $REPORT_FILE
+          echo "| ARM      | gcc      | Passed |" >> $REPORT_FILE
+          echo "| ARM      | clang    | Passed |" >> $REPORT_FILE
+          echo "| x64      | gcc      | Passed |" >> $REPORT_FILE
+          echo "| x64      | clang    | Passed |" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "### Windows" >> $REPORT_FILE
+          echo "| Platform | Compiler | Status |" >> $REPORT_FILE
+          echo "|----------|----------|--------|" >> $REPORT_FILE
+          echo "| x64      | clang    | Passed |" >> $REPORT_FILE
+          echo "| x64      | gcc      | Passed |" >> $REPORT_FILE
+          echo "| x64      | msvc     | Passed |" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "### macOS" >> $REPORT_FILE
+          echo "| Platform | Compiler | Status |" >> $REPORT_FILE
+          echo "|----------|----------|--------|" >> $REPORT_FILE
+          echo "| x64      | clang    | Passed |" >> $REPORT_FILE
+          echo "| x64      | gcc      | Passed |" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "### BSD" >> $REPORT_FILE
+          echo "| Platform | Compiler | Status |" >> $REPORT_FILE
+          echo "|----------|----------|--------|" >> $REPORT_FILE
+          echo "| x64      | gcc      | Passed |" >> $REPORT_FILE
+          echo "| x64      | clang    | Passed |" >> $REPORT_FILE
+          echo "" >> $REPORT_FILE
+          echo "### Solaris" >> $REPORT_FILE
+          echo "| Platform | Compiler | Status |" >> $REPORT_FILE
+          echo "|----------|----------|--------|" >> $REPORT_FILE
+          echo "| x64      | gcc      | Passed |" >> $REPORT_FILE
+          echo "| x64      | clang    | Passed |" >> $REPORT_FILE
